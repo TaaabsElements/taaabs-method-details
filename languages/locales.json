@@ -1,0 +1,26 @@
+{
+    "en": {
+      "toggle-panel": "Toggle the panel.",
+      "method-of": "Method of",
+      "static-parameters": "Static parameters",
+      "settable-parameters": "Settable parameters",
+      "apply-to": "Apply to",
+      "complete-base-url": "Complete the base url here.",
+      "base-url": "Target base url",
+      "refresh-trace-list": "Refresh the target trace list.",
+      "apply": "Apply",
+      "computed-trace-id": "Computed trace id"
+    },
+    "fr": {
+      "toggle-panel": "Afficher/Cacher la section.",
+      "method-of": "Méthode de",
+      "static-parameters": "Paramètres statiques",
+      "settable-parameters": "Paramètres modifiables",
+      "apply-to": "Appliquer à",
+      "complete-base-url": "Complétez l'url de la base ici.",
+      "base-url": "Url de la base cible",
+      "refresh-trace-list": "Rafraichir la liste des traces cible.",
+      "apply": "Appliquer",
+      "computed-trace-id": "Identifiant de la trace calculée"
+    }
+}

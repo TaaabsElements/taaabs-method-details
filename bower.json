@@ -1,0 +1,37 @@
+{
+  "name": "taaabs-method-details",
+  "version": "0.1.0",
+  "description": "`<taaabs-method-details>` is a graphical element that helps applying methods on some traces.",
+  "keywords": [
+    "web-components",
+    "polymer",
+    "taaabs"
+  ],
+  "authors": [
+    "Remi Casado"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TaaabsElements/taaabs-method-details.git"
+  },
+  "main": "taaabs-method-details.html",
+  "license": "https://github.com/TaaabsElements/taaabs-method-details/LICENSE",
+  "dependencies": {
+    "polymer": "polymer/polymer",
+    "taaabs-themes":"TaaabsElements/taaabs-themes",
+    "taaabs-taaabs":"TaaabsElements/taaabs-taaabs",
+    "app-localize-behavior": "PolymerElements/app-localize-behavior",
+    "notify-toast-behavior": "Yepikae/notify-toast-behavior",
+    "paper-input": "PolymerElements/paper-input",
+    "paper-button": "PolymerElements/paper-button",
+    "iron-collapse": "PolymerElements/iron-collapse",
+    "iron-icon": "PolymerElements/iron-icon",
+    "iron-icons": "PolymerElements/iron-icons"
+
+  },
+  "devDependencies": {
+    "iron-component-page": "polymerelements/iron-component-page#^1.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "ignore": []
+}

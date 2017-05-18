@@ -1,0 +1,1498 @@
+<!-- THEME -->
+<link rel="import" href="../taaabs-themes/taaabs-theme.html">
+<link rel="import" href="../taaabs-taaabs/taaabs-taaabs.html">
+<!-- POLYMER APP HELPERS -->
+<link rel="import" href="../app-localize-behavior/app-localize-behavior.html">
+<link rel="import" href="../notify-toast-behavior/notify-toast-behavior.html">
+<!-- Paper elements -->
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../iron-collapse/iron-collapse.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="../iron-icons/iron-icons.html">
+
+<dom-module id="taaabs-method-details">
+  <template>
+    <style include="taaabs-theme"></style>
+    <style>
+      :host {
+        display: block;
+      }
+      :host #method-header{
+        font-size: 16px;
+      }
+      :host #method-header-label{
+        font-style: italic;
+        line-height: 24px;
+      }
+      :host section {
+        width: 1000px;
+        margin: 0 auto;
+      }
+      :host .apply-to-icon{
+        width: 100%;
+        height: 32px;
+        border-radius: 5px;
+      }
+      :host .trace-list-div:nth-child(2n){
+        background-color: var(--paper-grey-100);
+      }
+    </style>
+
+    <section>
+      <div>
+        <a id="method-header" href="[[method.id]]" target="_blank">[[method.id]]</a></br>
+        <span id="method-header-label"> [[method.label]] </span>
+        <template is="dom-repeat" items="[[_computeComment(method.comment)]]" index-as="index">
+          <p>
+            [[item]]
+          </p>
+        </template>
+      </div>
+    </section>
+
+    <section>
+      <div class="fit-width flex-horizontal flex-end-align" style="height: 24px">
+        <span style="line-height: 24px; font-weight: bold">[[localize('method-of')]]</span>
+        <div class="flexchild fit-width" style="border-top: solid 1px grey; margin-bottom: 10px; margin-left: 5px"></div>
+        <iron-icon class="hoverable fgBlack fgBlackH clickable" style="float:right" title="[[localize('toggle-panel')]]"
+                   icon="icons:expand-more" on-click="_onToggleMethodOf"></iron-icon>
+      </div>
+      <iron-collapse id="method-of-collapse" opened>
+        <ul>
+          <template is="dom-repeat" items="[[method.isMethodOf]]" index-as="index">
+            <li><a href="[[_getAbsoluteUrl(item)]]" target="_blank">[[_getAbsoluteUrl(item)]]</a></li>
+          </template>
+        </ul>
+      </iron-collapse>
+    </section>
+
+
+    <section>
+      <div class="fit-width flex-horizontal flex-end-align" style="height: 24px">
+        <span style="line-height: 24px; font-weight: bold">[[localize('static-parameters')]]</span>
+        <div class="flexchild fit-width" style="border-top: solid 1px grey; margin-bottom: 10px; margin-left: 5px"></div>
+        <iron-icon class="hoverable fgBlack fgBlackH clickable" style="float:right" title="[[localize('toggle-panel')]]"
+                   icon="icons:expand-more" on-click="_onToggleStaticParameters"></iron-icon>
+      </div>
+      <iron-collapse id="static-parameters-collapse" opened>
+        <div id="static-parameters" class="fit-width flex-horizontal flex-wrap"></div>
+      </iron-collapse>
+    </section>
+
+    <section>
+      <div class="fit-width flex-horizontal flex-end-align" style="height: 24px">
+        <span style="line-height: 24px; font-weight: bold">[[localize('settable-parameters')]]</span>
+        <div class="flexchild fit-width" style="border-top: solid 1px grey; margin-bottom: 10px; margin-left: 5px"></div>
+        <iron-icon class="hoverable fgBlack fgBlackH clickable" style="float:right" title="[[localize('toggle-panel')]]"
+                   icon="icons:expand-more" on-click="_onToggleSettableParameters"></iron-icon>
+      </div>
+      <iron-collapse id="settable-parameters-collapse" opened>
+        <div id="settable-parameters" class="fit-width flex-horizontal flex-wrap"></div>
+      </iron-collapse>
+    </section>
+
+    <section>
+      <div class="fit-width flex-horizontal flex-end-align" style="height: 24px">
+        <span style="line-height: 24px; font-weight: bold">[[localize('apply-to')]]</span>
+        <div class="flexchild fit-width" style="border-top: solid 1px grey; margin-bottom: 10px; margin-left: 5px"></div>
+        <iron-icon class="hoverable fgBlack fgBlackH clickable" style="float:right" title="[[localize('toggle-panel')]]"
+                   icon="icons:expand-more" on-click="_onToggleApplyTo"></iron-icon>
+      </div>
+      <iron-collapse id="apply-to-collapse" opened>
+        <div class="flex-horizontal flex-end-align">
+          <span style="margin-bottom: 8px; line-height: 28px">[[ktbsUrl]]</span>
+          <paper-input class="flexchild" label="[[localize('base-url')]]" placeholder="[[localize('complete-base-url')]]" value="{{_baseUrlSuffix}}"></paper-input>
+          <iron-icon style="margin-bottom: 8px" class="fgBlack fgBlackH hoverable clickable" title="[[localize('refresh-trace-list')]]" on-click="_onRefreshBaseClick" icon="icons:refresh"></iron-icon>
+        </div>
+        <div class="fit-width swag-scroll" style="max-height: 450px">
+          <template is="dom-repeat" items="[[_traceList]]" index-as="index" strip-whitespace>
+            <div class="fit-width flex-horizontal trace-list-div">
+              <div style="width: 40%; line-height: 62px">
+                [[item.id]]
+              </div>
+              <div style="width : 20%; padding: 15px">
+                <iron-icon icon="icons:trending-flat" class="apply-to-icon hoverable clickable bgLogH fgWhiteH" on-click="_onApplyIconClick"></iron-icon>
+              </div>
+              <div style="width: 40%">
+                <paper-input label="[[localize('computed-trace-id')]]" on-input="_onApplyInputChange" class="fit-width"></paper-input>
+              </div>
+            <div>
+          </template>
+        </div>
+      </iron-collapse>
+    </section>
+
+    <section>
+      <div class="fit-width" style="padding-right: 30px; padding-left: 6px; padding-top: 15px;">
+        <paper-button class="fit-width bgLog bgLogH hoverable fgWhite fgWhiteH" id="apply-button" on-click="_onApplyClick" raised noink>[[localize('apply')]]</paper-button>
+      </div>
+    </section>
+
+    <!-- Notify toast -->
+    <paper-toast id="__notify_toast__" style="background-color:rgba(0,0,0,0.67)" duration=0> </paper-toast>
+
+  </template>
+  <script>
+    TAAABS.MethodDetails = Polymer({
+      is: 'taaabs-method-details',
+
+      properties: {
+
+        /** ================================================================ **/
+        /**  PUBLIC PROPERTIES                                               **/
+
+        /**
+         * The method URL.
+         *
+         * @attribute methodUrl
+         * @type String
+         */
+        methodUrl: {
+          type: String,
+          value: ""
+        },
+
+        /**
+         * The method.
+         *
+         * @attribute method
+         * @type Object
+         */
+        method: {
+          type: Object,
+          value: null
+        },
+
+        /**
+         * The method base URL.
+         *
+         * @attribute baseUrl
+         * @type String
+         */
+        baseUrl: {
+         type: String,
+         value: ""
+        },
+
+        /**
+         * The method base.
+         *
+         * @attribute base
+         * @type Object
+         */
+        base: {
+         type: Object,
+         value: null
+        },
+
+        /**
+         * The ktbs url.
+         *
+         * @attribute ktbsUrl
+         * @type String
+         */
+        ktbsUrl: {
+         type: String,
+         notify: true,
+         value: null
+        },
+
+        /**
+         * i18n
+         *
+         * @attribute language
+         * @type String
+         */
+        language: {
+         type: String,
+         notify: true,
+         value: 'en'
+        },
+
+        /** ================================================================ **/
+        /**  PRIVATE PROPERTIES                                              **/
+
+        /**
+         * The base url minus the ktbs url.
+         *
+         * @attribute _baseUrlSuffix
+         * @type String
+         */
+        _baseUrlSuffix: {
+         type: String,
+         notify: true,
+         value: ""
+        },
+
+        /**
+         * List of pair parameter_name - function_to_get_parameter_value.
+         *
+         * @attribute _parameters
+         * @type Array
+         */
+        _parameters: {
+         type: Array,
+         notify: true,
+         value: []
+        },
+
+        /**
+         * List of traces on which we can apply the method.
+         *
+         * @attribute _traceList
+         * @type Array
+         */
+        _traceList: {
+         type: Array,
+         value: []
+        },
+
+       /**
+        * List of traces we'll create.
+        *
+        * @attribute _createComputedTraceList
+        * @type Array
+        */
+       _createComputedTraceList: {
+         type: Array,
+         value: []
+       }
+     },
+
+      behaviors: [
+        Polymer.AppLocalizeBehavior,
+        NotifyToastBehavior
+      ],
+
+      /** ================================================================== **/
+      /**  INITIALIZATION                                                    **/
+
+      /**
+       * Loads the i18n resources.
+       *
+       * @method attached
+       **/
+      attached: function() {
+        // Load i18n json.
+        this.loadResources(this.resolveUrl('./languages/locales.json'));
+      },
+
+      /**
+       * Entry point. If a methodUrl is defined, load the method.
+       *
+       * TODO Load the BUILTIN METHODS in a more generic way.
+       * TODO Create a method object in Samotraces.
+       *
+       * @method refresh
+       **/
+      refresh: function(){
+        // Reset the private Arrays, just in case...
+        this.set('_parameters', []);
+        this.set('_traceList', []);
+        this.set('_createComputedTraceList', []);
+        // And we start here.
+        if(this.methodUrl === ""){}
+        else if(this.methodUrl === "http://liris.cnrs.fr/silex/2009/ktbs#filter"){
+          this._loadFilter();
+        }
+        else{
+          this._loadMethod()
+            .then(function(method){
+              method.id = method['@id'];
+              method.isMethodOf = method.isMethodOf || [];
+              this.set('method', method);
+              this._displayMethodParameters();
+              this._loadBase();
+            }.bind(this)).catch(function(err){
+                console.log(err);
+            });
+        }
+      },
+
+      /**
+       * Reset the variables to their default values.
+       *
+       * @method clear
+       **/
+      clear: function(){
+        this.set('methodUrl'     , '');
+        this.set('method'        , null);
+        this.set('baseUrl'       , '');
+        this.set('base'          , null);
+        this.set('ktbsUrl'       , '');
+        this.set('_baseUrlSuffix', '');
+        this.set('_parameters'   , []);
+        this.set('_traceList'    , []);
+        this.set('_createComputedTraceList', []);
+      },
+
+      /**
+       * Returns a promise requesting a GET on the method url.
+       * Resolves the method json parsed.
+       *
+       * @method _loadMethod
+       **/
+      _loadMethod: function(){
+        return new Promise(function(resolve, reject) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', this.methodUrl, true);
+          xhr.setRequestHeader('Content-Type', 'application/ld+json');
+          xhr.setRequestHeader('Accept', 'application/ld+json');
+          xhr.withCredentials = true;
+          xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+              if(xhr.status === 200) {
+                resolve(JSON.parse(xhr.response));
+              } else {
+                reject(xhr);
+              }
+            }
+          };
+          xhr.onerror = function() {
+            reject(Error('There was a network error.'));
+          };
+          xhr.send();
+        }.bind(this));
+      },
+
+      /**
+       * On click on the base url refresh icon, set the base according to the enw base url.
+       *
+       * @method _onRefreshBaseClick
+       **/
+      _onRefreshBaseClick: function(){
+        this.set('baseUrl', this.ktbsUrl + this._baseUrlSuffix);
+        this._loadBase();
+      },
+
+      /**
+       * If the baseUrl is not defined, get the base relative to the method.
+       * If such base doesn't exist, do nothing. Otherwise, load the base,
+       * then retrieve the trace in the base.
+       *
+       * @method _loadBase
+       */
+      _loadBase: function() {
+        if(this.baseUrl === ""){
+          if(this.method['inBase'] !== undefined){
+            var base = new Samotraces.Ktbs.Base();
+            var url = base.getAbsoluteURLFromRelative(this.method.id, this.method['inBase']);
+            this.set('baseUrl', url);
+          }
+        }
+        if(this.baseUrl !== ""){
+          this.set('_baseUrlSuffix', this.baseUrl.replace(this.ktbsUrl, ''));
+          this.set('base', new Samotraces.Ktbs.Base(this.get('baseUrl')));
+          this.base.load()
+              .then(function(){
+                this._retrieveListBase();
+              }.bind(this))
+              .catch(function(err){
+                console.log(err);
+              })
+        }
+      },
+
+      /**
+       * Fill _traceList with the computed/stored traces of the base.
+       *
+       * @method _retrieveListBase
+       */
+      _retrieveListBase: function() {
+        // Get the children of the base.
+        var  l = this.base.contains;
+        this.set('_traceList', []);
+        // Fill _traceList with the Computed/Stored traces of the base.
+        for(var i = 0; i < l.length; i++){
+          if(l[i]['@type'] === "StoredTrace" || l[i]['@type'] === "ComputedTrace"){
+            if(!this.method.isMethodOf || this.method.isMethodOf.indexOf(l[i]['@id']) === -1)
+              this.push('_traceList',{
+                'id': l[i]['@id'],
+                'selected': false,
+                'value': "",
+                'error': false
+              });
+          }
+        }
+      },
+
+      /** ================================================================== **/
+      /**  METHOD INIT                                                       **/
+
+      /**
+       * Get the method parameters. If the method has a parent method, get its parameters too.
+       * Display the parameters into the static or settable list, either the parameter is already set or not.
+       *
+       * TODO Find a more generic way to retrieve the method informations.
+       * TODO Find a better way to get the parents parameters.
+       *
+       * @method _displayMethodParameters
+       */
+      _displayMethodParameters: function(){
+        if( this.method.hasParentMethod !== null && this.method.hasParentMethod !== undefined && this.method.hasParentMethod !== "" ){
+          // Get the parent documentation.
+          var infos = this._getDocumentation('http://liris.cnrs.fr/silex/2009/ktbs#'+this.method.hasParentMethod);
+          // If such documentation exists, check if the parent parameters are already set or not.
+          // If not displays them as settable. If they are already set, displays them as static.
+          if(infos !== null){
+            var methodParams = {};
+            for(var i in this.method.parameter){
+              var re = /(\w*)=(.*)/;
+              var matches = re.exec(this.method.parameter[i]);
+              methodParams[matches[1]]= matches[2];
+            }
+            for(var i in infos.acceptsParameter){
+              if(methodParams[infos.acceptsParameter[i].parameterName] !== undefined){
+                this._createGenericStaticParameter({
+                  'parameterName'   : infos.acceptsParameter[i].parameterName,
+                  'hasParameterType': infos.acceptsParameter[i].hasParameterType,
+                  'value'           : methodParams[infos.acceptsParameter[i].parameterName],
+                  'rdfs:label'      : infos.acceptsParameter[i]['rdfs:label']
+                });
+              }
+              else{
+                this._createGenericParameter(infos.acceptsParameter[i]);
+              }
+            }
+          }
+        }
+      },
+
+      /**
+       * Get the method porperties.
+       *
+       * TODO We should use the load method to retrieve the information from a silex server.
+       *
+       * @param {!required} methodUrl {String} The method url.
+       *
+       * @method _getDocumentation
+       */
+      _getDocumentation: function(methodUrl){
+        if(methodUrl === 'http://liris.cnrs.fr/silex/2009/ktbs#filter'){
+          return this._getFilterProperties();
+        }
+        else if(methodUrl === 'http://liris.cnrs.fr/silex/2009/ktbs#hrules'){
+          return this._getHrulesProperties();
+        }
+        else return null;
+      },
+
+      /** ================================================================== **/
+      /**  DOM                                                               **/
+
+      /**
+       * Returns the absolute url of a trace, for display purpose.
+       *
+       * @param {!required} relative {String} The relative url of a trace.
+       *
+       * @method _getAbsoluteUrl
+       */
+      _getAbsoluteUrl: function(relative){
+        return this.baseUrl + relative;
+      },
+
+      /**
+       * Returns the Array of comment split by '\n'. For display purpose.
+       *
+       * @param {!required} comment {String} The string to split each new line.
+       *
+       * @method _computeComment
+       */
+      _computeComment: function(comment){
+        try {
+          return comment.split('\n');
+        } catch (e) {
+          return [];
+        }
+      },
+
+      /**
+       * Self explaining.
+       *
+       * @method _onToggleStaticParameters
+       */
+      _onToggleStaticParameters: function(){
+        this.$['static-parameters-collapse'].toggle();
+      },
+
+      /**
+       * Self explaining.
+       *
+       * @method _onToggleSettableParameters
+       */
+      _onToggleSettableParameters: function(){
+        this.$['settable-parameters-collapse'].toggle();
+      },
+
+      /**
+       * Self explaining.
+       *
+       * @method _onToggleApplyTo
+       */
+      _onToggleApplyTo: function(){
+        this.$['apply-to-collapse'].toggle();
+      },
+
+      /**
+       * Self explaining.
+       *
+       * @method _onToggleMethodOf
+       */
+      _onToggleMethodOf: function(){
+        this.$['method-of-collapse'].toggle();
+      },
+
+      /** ================================================================== **/
+      /**  FILTER AD-HOC BEHAVIOR [TEMPORARY]                                **/
+
+      /**
+       * Displays the parameters of the buitlin filter method.
+       *
+       * TODO Remove this function once the properties ares live.
+       *
+       * @method _loadFilter
+       */
+      _loadFilter: function(){
+        var infos = this._getFilterProperties();
+        var method = {
+          'id'     : infos.url,
+          'label'  : infos['rdfs:label'][0]['@value'],
+          'comment': infos['rdfs:comment'][0]['@value']
+        }
+        this.set('method', method);
+        for(var i in infos.acceptsParameter){
+          this._createGenericParameter(infos.acceptsParameter[i]);
+        }
+      },
+
+      /**
+       * Returns the filter properties json.
+       *
+       * TODO Remove this function once the properties are live.
+       *
+       * @method _getFilterProperties
+       */
+      _getFilterProperties: function(){
+        return {
+          "@id": "filter",
+          "@type": "BuiltinMethod",
+          "url": "http://liris.cnrs.fr/silex/2009/ktbs#filter",
+          "rdfs:label": [{
+            "@value": "This method copies the obsels of the source trace if they pass the filter.",
+            "@language": "en"
+          }, {
+            "@value": "Todo",
+            "@language": "fr"
+          }],
+          "rdfs:comment": [{
+            "@value": "If parameter model (resp. origin) is not provided, the model (resp. origin) of the source trace will be used instead.\n"+
+                      "All filtering parameters are optional."+
+                      " If not specified, they will not constrain the obsels at all."+
+                      " For example, if otypes is not provided, obsels will be kepts regardless of their type;"+
+                      " on the other hand, if otypes is provided, only obsels with their type in the list will be kept.\n"+
+                      "Datetime timestamps can only be used if the source origin is itself a datetime."+
+                      " If a temporal boundary is given both as an integer and a datetime timestamp, the datetime will be ignored."+
+                      " Note that temporal boundaries are inclusive, but obsels must be entirely contained in them.\n"+
+                      "The bgp parameter accepts any SPARQL BGP (i.e. triple patterns, FILTER clauses) used to add further criteria to the obsels to keep in the computed trace."+
+                      " The SPARQL variables ?obs, ?b and ?e are bound respectively to the obsel, its begin timestamp and its end timestamp.\n"+
+                      "The prefix m: is bound to the source trace model URI.",
+            "@language": "en"
+          }, {
+            "@value": "Todo",
+            "@language": "fr"
+          }],
+            "acceptsParameter": [{
+            "parameterName": "model",
+            "hasParameterType": "URL",
+            "rdfs:label": [{
+              "@value": "Target trace model",
+              "@language": "en"
+            }, {
+              "@value": "modèle de trace cible",
+              "@language": "fr"
+            }],
+            "rdfs:comment": [{
+              "@value": "Specifies the model of the transformed trace. If not provided, the same model as the source will be used.",
+              "@language": "en"
+            }, {
+              "@value": "Spécifie le modèle de la trace transformée. S'il n'est pas fourni, le même modèle que la trace source sera utilisé.",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "origin",
+            "hasParameterType": "Origin",
+            "rdfs:label": [{
+              "@value": "The origin of the computed trace",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "after",
+            "hasParameterType": "Timestamp",
+            "rdfs:label": [{
+              "@value": "The integer timestamp below which obsels are filtered out.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "before",
+            "hasParameterType": "Timestamp",
+            "rdfs:label": [{
+              "@value": "The integer timestamp above which obsels are filtered out.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "afterDT",
+            "hasParameterType": "xsd:dateTime",
+            "rdfs:label": [{
+              "@value": "The datetime timestamp below which obsels are filtered out.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "beforeDT",
+            "hasParameterType": "xsd:dateTime",
+            "rdfs:label": [{
+              "@value": "The datetime timestamp above which obsels are filtered out.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "otypes",
+            "hasParameterType": "ObselType",
+            "isMultivalued": true,
+            "rdfs:label": [{
+              "@value": "Space-separated list of URIs indicating which obsel types must be kept in the computed trace.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "bgp",
+            "hasParameterType": "https://www.w3.org/TR/sparql11-query/#BasicGraphPatterns",
+            "rdfs:label": [{
+              "@value": "A SPARQL Basic Graph Pattern used to express additional criteria.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }]
+        }
+      },
+
+      /** ================================================================== **/
+      /**  HRULES AD-HOC BEHAVIOR [TEMPORARY]                                **/
+
+      /**
+       * TODO Complete this function.
+       *
+       * @method _loadHrules
+       */
+      _loadHrules : function(){},
+
+      /**
+       * Returns the hrules properties json.
+       *
+       * TODO Remove this function once the properties are live.
+       *
+       * @method _getHrulesProperties
+       */
+      _getHrulesProperties: function(){
+        return {
+          "@id": "hrules",
+          "@type": "BuiltinMethod",
+          "url": "http://liris.cnrs.fr/silex/2009/ktbs#hrules",
+          "rdfs:label": [{
+            "@value": "This method copies the obsels of the source trace that fullfil the rules of the method, getting typed by its most prevalent rule.",
+            "@language": "en"
+          }, {
+            "@value": "Todo",
+            "@language": "fr"
+          }],
+          "rdfs:comment": [{
+            "@value": "This method is named after the Hubble project, in which they have been proposed."+
+                      " Those rules can be used both as a stylesheet in the Taaabs timeline component, and as a transformation, thanks to this method."+
+                      " A benefit is that such a transformation can be built interactively in the timeline, with a direct visual feedback of its effect,"+
+                      " then “materialized” as a user-defined method and applied to other traces.\n"+
+                      "For more informations on the rules format, see https://kernel-for-trace-based-systems.readthedocs.io/en/latest/methods/hrules.html.",
+            "@language": "en"
+          }, {
+            "@value": "Todo",
+            "@language": "fr"
+          }],
+            "acceptsParameter": [{
+            "parameterName": "model",
+            "hasParameterType": "URL",
+            "rdfs:label": [{
+              "@value": "Target trace model",
+              "@language": "en"
+            }, {
+              "@value": "modèle de trace cible",
+              "@language": "fr"
+            }],
+            "rdfs:comment": [{
+              "@value": "Specifies the model of the transformed trace. If not provided, the same model as the source will be used.",
+              "@language": "en"
+            }, {
+              "@value": "Spécifie le modèle de la trace transformée. S'il n'est pas fourni, le même modèle que la trace source sera utilisé.",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "origin",
+            "hasParameterType": "Origin",
+            "rdfs:label": [{
+              "@value": "The origin of the computed trace",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }, {
+            "parameterName": "rules",
+            "hasParameterType": "json",
+            "rdfs:label": [{
+              "@value": "	The description of the rules.",
+              "@language": "en"
+            }, {
+              "@value": "Todo",
+              "@language": "fr"
+            }]
+          }]
+        }
+      },
+
+      /** ================================================================== **/
+      /**  APPLY METHOD                                                      **/
+
+      /**
+       * On apply icon : ( -> ) click. Toggle the _traceList selected element state.
+       * Set the color of the apply icon according to the _traceList state.
+       *
+       * @param {!required} evt {Event} The click event.
+       *
+       * @method _onApplyIconClick
+       */
+      _onApplyIconClick: function(evt){
+        var index = evt.model.index;
+        var icon = evt.target;
+        if(this._traceList[index].selected){
+          this._traceList[index].selected = false;
+          if(this._traceList[index].error){
+            icon.classList.remove('bgError', 'bgErrorH', 'fgWhite');
+          }
+          else if(this._traceList[index].value === ""){
+            icon.classList.remove('bgWarning', 'bgWarningH', 'fgWhite');
+          }
+          else{
+            icon.classList.remove('bgSuccess', 'bgSuccessH', 'fgWhite');
+          }
+          icon.classList.add('bgLogH');
+        }
+        else{
+          var parent = icon.parentNode;
+          var input = parent.nextSibling;
+          input = input.firstChild;
+          var ct_id = input.get('value');
+          this._traceList[index].selected = true;
+          this._traceList[index].value = ct_id;
+          if(ct_id === ""){
+            this._traceList[index].error = false;
+            icon.classList.add('bgWarning', 'bgWarningH', 'fgWhite');
+          }
+          else if(this._isInvalid(index)){
+            this._traceList[index].error = true;
+            icon.classList.add('bgError', 'bgErrorH', 'fgWhite');
+          }
+          else{
+            this._traceList[index].error = false;
+            icon.classList.add('bgSuccess', 'bgSuccessH', 'fgWhite');
+          }
+          icon.classList.remove('bgLogH');
+        }
+      },
+
+      /**
+       * On apply input ( the target trace id ) change. Update the _traceList element status.
+       *
+       * @param {!required} evt {Event} The change event.
+       *
+       * @method _onApplyInputChange
+       */
+      _onApplyInputChange: function(evt){
+        var elem = evt.target;
+        var parent = elem.parentNode;
+        var icon = parent.previousSibling;
+        icon = icon.firstChild;
+        var value = elem.value;
+        var index = evt.model.index;
+        // Change the value & status.
+        this._traceList[index].value = value;
+        this._traceList[index].error = this._isInvalid(index);
+        // Change the apply icon color.
+        if(this._traceList[index].selected){
+          if(this._traceList[index].error){
+            icon.classList.add('bgError', 'bgErrorH', 'fgWhite');
+            icon.classList.remove('bgWarning', 'bgWarningH', 'bgSuccess', 'bgSuccessH', 'bgLogH');
+          }
+          else if(this._traceList[index].value === ""){
+            icon.classList.add('bgWarning', 'bgWarningH', 'fgWhite');
+            icon.classList.remove('bgError', 'bgErrorH', 'bgSuccess', 'bgSuccessH', 'bgLogH');
+          }
+          else{
+            icon.classList.add('bgSuccess', 'bgSuccessH', 'fgWhite');
+            icon.classList.remove('bgWarning', 'bgWarningH', 'bgError', 'bgErrorH', 'bgLogH');
+          }
+        }
+      },
+
+      /**
+       * Return true the `index` trace target id is invalid (duplicate, invalid char, ...)
+       *
+       * @param {!required} index {Number} The index of the target trace id.
+       *
+       * @method _isInvalid
+       */
+      _isInvalid: function(index){
+        if(this._traceList[index].value.search(/[\s\\\/#\'\-\(\),|]+/) !== -1) return true;
+        for(var i = 0; i < index; i++){
+          if(this._traceList[index].value === this._traceList[i].value) return true;
+        }
+        for(var i = index + 1; i < this._traceList.length; i++){
+          if(this._traceList[index].value === this._traceList[i].value) return true;
+        }
+        return false;
+      },
+
+      /**
+       * Fill the _createComputedTraceList with the selected traces.
+       * Calls _createComputedTrace to start the creation of the computed traces.
+       *
+       * @method _onApplyClick
+       */
+      _onApplyClick: function() {
+        this.$['apply-button'].disabled = true;
+        this.set('_createComputedTraceList', []);
+        for(var i = 0; i < this._traceList.length; i++){
+          if(this._traceList[i].selected && !this._traceList[i].error && this._traceList[i].value !== ""){
+            var l = {
+              "id": this._traceList[i].value+'/',
+              "sources": [this._traceList[i].id]
+            }
+            this.push('_createComputedTraceList', l);
+          }
+        }
+        this._createComputedTrace();
+      },
+
+      /**
+       * Pop a trace from _createComputedTraceList. Create the computed trace.
+       * Calls _createComputedTrace
+       * Notify success when there's no more computed trace to create.
+       *
+       * @method _createComputedTrace
+       */
+      _createComputedTrace: function() {
+        if(this._createComputedTraceList.length > 0){
+          var l = this.pop('_createComputedTraceList');
+          var params = [];
+          for(var i in this._parameters){
+            // TODO Isn't an empty String still a param ?
+            if(this._parameters[i].getValue() !== "") params.push(this._parameters[i].name + "=" + this._parameters[i].getValue());
+          }
+          this.base.create_computed_trace(l.id, this.methodUrl, params, l.sources, "Generated with KTBS4LA.")
+              .then(function(){
+                this._createComputedTrace();
+              }.bind(this))
+              .catch(function(err){
+                console.log(err);
+              })
+        }
+        else{
+          this.notifyToast( "The computed traces have been created!", {
+            type:'Success'
+          });
+        }
+      },
+
+      /** ================================================================== **/
+      /**  STATIC PARAMETERS CREATION                                        **/
+
+      /**
+       * Generate the right DOM element to display the static paramter.
+       *
+       * @param {!required} parameter {Object} The parameter to display.
+       *
+       * @method _createGenericStaticParameter
+       */
+      _createGenericStaticParameter: function(parameter){
+        var type  = parameter.hasParameterType;
+        var name  = parameter.parameterName || 'undefined';
+        var value = parameter.value;
+        var label = "";
+        if(parameter['rdfs:label'] !== null && parameter['rdfs:label'] !== undefined){
+          label = parameter['rdfs:label'][0]['@value'];
+        }
+        if     (type === 'URL' || type ===  'Origin' || type ===  'Timestamp' || type ===  'xsd:dateTime'){
+          this._createStaticPlainTextField(name, label, value);
+        }
+        else if(type === 'ObselType'){
+          this._createStaticListField(name, label, value);
+        }
+        else if(type === 'https://www.w3.org/TR/sparql11-query/#BasicGraphPatterns'){
+          //this._createStaticLongTextField(name, label, value);
+        }
+        else if(type === 'json'){
+          this._createStaticJsonField(name, label, value);
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a static plain text paramter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       * @param {!required}  value {String} The value of the parameter to display.
+       *
+       * @method _createStaticPlainTextField
+       */
+      _createStaticPlainTextField: function(name, label, value){
+        // Main div
+        var div       = this._DOMFactory_div(['fit-width'], {'padding': '5px'});
+        // Name div
+        var name_div  = this._DOMFactory_div(['fit-width', 'fgGrey']);
+            name_div.textContent = name+' : '+label;
+        // Value div
+        var value_div = this._DOMFactory_div(['fit-width']);
+            value_div.textContent = value;
+        // Append All the things o/
+        div.appendChild(name_div);
+        div.appendChild(value_div);
+        this.$['static-parameters'].appendChild(div);
+      },
+
+      /**
+       * Generate the right DOM element to display a static json paramter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       * @param {!required}  value {String} The value of the parameter to display.
+       *
+       * @method _createStaticJsonField
+       */
+      _createStaticJsonField: function(name, label, value){
+        // Main div
+        var div       = this._DOMFactory_div(['fit-width'], {'padding': '5px'});
+        // Name div
+        var name_div  = this._DOMFactory_div(['fit-width', 'fgGrey']);
+            name_div.textContent = name+' : '+label;
+        // Value div
+        var value_pre = this._DOMFactory_pre(['fit-width', 'swag-scroll'], {'max-height': '250px'});
+            value_pre.textContent = JSON.stringify(JSON.parse(value), null, '  ');
+        // Append All the things o/
+        div.appendChild(name_div);
+        div.appendChild(value_pre);
+        this.$['static-parameters'].appendChild(div);
+      },
+
+      /** ================================================================== **/
+      /**  PARAMETERS CREATION                                               **/
+
+      /**
+       * Generate the right DOM element to display the settable paramter.
+       *
+       * @param {!required} parameter {Object} The parameter to display.
+       *
+       * @method _createGenericParameter
+       */
+      _createGenericParameter: function(parameter){
+        var type  = parameter.hasParameterType;
+        var name  = parameter.parameterName || 'undefined';
+        var label = "";
+        if(parameter['rdfs:label'] !== null && parameter['rdfs:label'] !== undefined){
+          label = parameter['rdfs:label'][0]['@value'];
+        }
+        var f = null;
+        if     (type === 'URL'){
+          f = this._createUrlField(name, label);
+        }
+        else if(type === 'Origin'){
+          f = this._createPlainTextField(name, label);
+        }
+        else if(type === 'Timestamp'){
+          f = this._createNumberField(name, label, 0);
+        }
+        else if(type === 'xsd:dateTime'){
+          f = this._createDatetimeField(name, label);
+        }
+        else if(type === 'ObselType'){
+          f = this._createListField(name, label);
+        }
+        else if(type === 'https://www.w3.org/TR/sparql11-query/#BasicGraphPatterns' || type === 'json'){
+          f = this._createTextareaField(name, label);
+        }
+        this._parameters.push({
+            'name': name,
+            'getValue': f
+        });
+      },
+
+      /**
+       * Generate the right DOM element to display a settable URL parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       *
+       * TODO Create verification process.
+       *
+       * @method _createUrlField
+       */
+      _createUrlField: function(name, label){
+        // Main div
+        var div = document.createElement('div');
+        div.style.width =   "50%";
+        div.style.padding = "5px";
+        // paper-input
+        var pi = document.createElement('paper-input');
+        pi.classList.add('fit-width');
+        pi.set('label', name);
+        pi.set('placeholder', name+' : '+label);
+        // Append All the things o/
+        div.appendChild(pi);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          return pi.get('value');
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a settable plain text parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       *
+       * @method _createPlainTextField
+       */
+      _createPlainTextField: function(name, label){
+        // Main div
+        var div = document.createElement('div');
+        div.style.width =   "50%";
+        div.style.padding = "5px";
+        // paper-input
+        var pi = document.createElement('paper-input');
+        pi.classList.add('fit-width');
+        pi.set('label', name);
+        pi.set('placeholder', name+' : '+label);
+        // Append All the things o/
+        div.appendChild(pi);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          return pi.get('value');
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a settable number parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       * @param {!optionnal} min   {Number} The minimum value of the parameter to display.
+       * @param {!optionnal} max   {Number} The maximum value of the parameter to display.
+       *
+       * @method _createNumberField
+       */
+      _createNumberField: function(name, label, min, max){
+        // Main div
+        var div = document.createElement('div');
+        div.style.width =   "50%";
+        div.style.padding = "5px";
+        // paper-input
+        var pi = document.createElement('paper-input');
+        pi.classList.add('fit-width');
+        pi.set('label', name);
+        pi.set('type', 'number');
+        min = (min !== undefined && min !== null) ? min : Number.NEGATIVE_INFINITY;
+        pi.set('min', min);
+        max = (max !== undefined && max !== null) ? max : Number.POSITIVE_INFINITY;
+        pi.set('max', max);
+        pi.set('placeholder', name+' : '+label);
+        // Append All the things o/
+        div.appendChild(pi);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          return pi.get('value');
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a settable datetime parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       *
+       * TODO Create validation process.
+       *
+       * @method _createDatetimeField
+       */
+      _createDatetimeField: function(name, label){
+        // Main div
+        var div               = this._DOMFactory_div([], {'width': '50%', 'padding': '5px'});
+        // Global input
+        var input_div         = this._DOMFactory_div(['flex-horizontal', 'flex-end-align', 'fit-width'], {});
+        var input             = this._DOMFactory_input(name, name+ ' : '+label, '', ['fit-width'], {});
+        var toggle_icon       = this._DOMFactory_icon('icons:today', 'Show calendar options', ['fgBlack', 'fgBlackH', 'hoverable', 'clickable'], {'margin-bottom': '8px'});
+            toggle_icon.addEventListener('click', function(){
+              datetime_collapse.toggle();
+              if(datetime_collapse.opened){
+                var date = new Date(input.get('value'));
+                year_input.set(       'value', (timezone_icon.checked) ? date.getFullYear()     : date.getUTCFullYear());
+                month_input.set(      'value', (timezone_icon.checked) ? date.getMonth() + 1    : date.getUTCMonth() + 1);
+                day_input.set(        'value', (timezone_icon.checked) ? date.getDate()         : date.getUTCDate());
+                hour_input.set(       'value', (timezone_icon.checked) ? date.getHours()         : date.getUTCHours());
+                min_input.set(        'value', (timezone_icon.checked) ? date.getMinutes()      : date.getUTCMinutes());
+                second_input.set(     'value', (timezone_icon.checked) ? date.getSeconds()      : date.getUTCSeconds());
+                millisecond_input.set('value', (timezone_icon.checked) ? date.getMilliseconds() : date.getUTCMilliseconds());
+              }
+            });
+        var timezone_icon     = this._DOMFactory_icon('icons:language', 'Use local timezone', ['fgBlack', 'fgBlackH', 'hoverable', 'clickable'], {'margin-bottom': '8px'});
+            timezone_icon.checked = false;
+            timezone_icon.addEventListener('click', function(){
+              timezone_icon.checked = !timezone_icon.checked;
+              if(timezone_icon.checked){
+                timezone_icon.classList.add('fgLog', 'fgLogH');
+                timezone_icon.classList.remove('fgBlack', 'fgBlackH');
+              }
+              else{
+                timezone_icon.classList.add('fgBlack', 'fgBlackH');
+                timezone_icon.classList.remove('fgLog', 'fgLogH');
+              }
+              updateInput();
+            });
+        input_div.appendChild(input);
+        input_div.appendChild(toggle_icon);
+        input_div.appendChild(timezone_icon);
+        // Datetime collapse
+        var datetime_collapse = this._DOMFactory_iron_collapse(['fit-width'], {});
+        // Date inputs
+        var date_div          = this._DOMFactory_div(['flex-horizontal', 'flex-equal-justified', 'fit-width'], {});
+        var day_input         = this._DOMFactory_input_number('day',    '', 1, 31,   1,    2,['fit-width'], {});
+            day_input.addEventListener('change', updateInput);
+        var month_input       = this._DOMFactory_input_number('month',  '', 1, 12,   1,    2,['fit-width'], {});
+            month_input.addEventListener('change', updateInput);
+        var year_input        = this._DOMFactory_input_number('year',   '', 0, null, 2017, 4,['fit-width'], {});
+            year_input.addEventListener('change', updateInput);
+        date_div.appendChild(day_input);
+        date_div.appendChild(month_input);
+        date_div.appendChild(year_input);
+        // Time inputs
+        var time_div          = this._DOMFactory_div(['flex-horizontal', 'flex-equal-justified', 'fit-width'], {});
+        var hour_input        = this._DOMFactory_input_number('hour',   '', 0, 23,   0,    2,['fit-width'], {});
+            hour_input.addEventListener('change', updateInput);
+        var min_input         = this._DOMFactory_input_number('min',    '', 0, 59,   0,    2,['fit-width'], {});
+            min_input.addEventListener('change', updateInput);
+        var second_input      = this._DOMFactory_input_number('second', '', 0, 59,   0,    2,['fit-width'], {});
+            second_input.addEventListener('change', updateInput);
+        var millisecond_input = this._DOMFactory_input_number('ms',     '', 0, 999,  0,    3,['fit-width'], {});
+            millisecond_input.addEventListener('change', updateInput);
+        time_div.appendChild(hour_input);
+        time_div.appendChild(min_input);
+        time_div.appendChild(second_input);
+        time_div.appendChild(millisecond_input);
+        // Listener on date/time inputs
+        function updateInput(){
+          try {
+            var date = null;
+            if(timezone_icon.checked) date = new Date(
+              year_input.get('value'), month_input.get('value') - 1, day_input.get('value'),
+              hour_input.get('value'), min_input.get('value'), second_input.get('value'), millisecond_input.get('value'));
+            else date = new Date(Date.UTC(
+              year_input.get('value'), month_input.get('value') - 1, day_input.get('value'),
+              hour_input.get('value'), min_input.get('value'), second_input.get('value'), millisecond_input.get('value')));
+            input.set('value', date.toISOString());
+          } catch (e) {}
+        }
+        // Append all the things o/
+        div.appendChild(input_div);
+        datetime_collapse.appendChild(date_div);
+        datetime_collapse.appendChild(time_div);
+        div.appendChild(datetime_collapse);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          return input.get('value');
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a settable list parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       *
+       * @method _createListField
+       */
+      _createListField: function(name, label){
+        // Main div
+        var div = this._DOMFactory_div([], {'width': '50%', 'padding': '5px'});
+        // Input div
+        // Global input
+        var input_div         = this._DOMFactory_div(['flex-horizontal', 'flex-end-align', 'fit-width'], {});
+        var input             = this._DOMFactory_input(name, name+ ' : '+label, '', ['fit-width'], {});
+        var add_icon          = this._DOMFactory_icon('icons:add', 'Add entry', ['fgBlack', 'fgBlackH', 'hoverable', 'clickable'], {'margin-bottom': '8px'});
+            // Create a line in the table with an icon to remove the created line.
+            add_icon.addEventListener('click', function(){
+              var line        = document.createElement('tr');
+              var td          = document.createElement('td');
+              td.textContent  = input.get('value');
+              var close_icon  = this._DOMFactory_icon('icons:close', 'Remove entry', ['fgError', 'fgErrorH', 'hoverable', 'clickable', 'small'], {'float':'right'});
+                  close_icon.addEventListener('click', function(evt){
+                    var icon = evt.target;
+                    var td = icon.parentNode;
+                    var line = td.parentNode;
+                    table.removeChild(line);
+                  });
+              td.appendChild(close_icon);
+              line.appendChild(td);
+              table.appendChild(line);
+              input.set('value', '');
+            }.bind(this));
+        input_div.appendChild(input);
+        input_div.appendChild(add_icon);
+        // Table
+        var table             = this._DOMFactory_table(['fit-width'], {});
+        // Append all the things o/
+        div.appendChild(input_div);
+        div.appendChild(table);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          var list = table.childNodes;
+          var result = "";
+          for(var i = 0; i < list.length - 1; i++){
+            result += list[i].firstChild.textContent + ' ';
+          }
+          if(list.length > 0)result += list[i].firstChild.textContent;
+          return result;
+        }
+      },
+
+      /**
+       * Generate the right DOM element to display a settable long text parameter.
+       * Returns a function to retrieve the value of the parameter.
+       *
+       * @param {!required}  name  {String} The name of the parameter to display.
+       * @param {!optionnal} label {String} The label of the parameter to display.
+       *
+       * @method _createTextareaField
+       */
+      _createTextareaField: function(name, label){
+        // Main div
+        var div   = this._DOMFactory_div([], {'width': '50%', 'padding': '5px'});
+        // Glocal input
+        var input = this._DOMFactory_textarea(name, label, '', 1, 15, ['fit-width'], {});
+        // Append all the things o/
+        div.appendChild(input);
+        this.$['settable-parameters'].appendChild(div);
+
+        return function(){
+          return input.get('value');
+        }
+      },
+
+      /** ================================================================== **/
+      /**  DOM ELEMENTS FACTORIES                                            **/
+
+      /**
+       * Returns a DIV element.
+       *
+       * @param {!required} classes  {Array}  A list of classes.
+       * @param {!required} style    {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_div
+       */
+      _DOMFactory_div: function(classes, style){
+        var div = document.createElement('div');
+        for(var i in classes) div.classList.add(classes[i]);
+        for(var i in style)   div.style[i] = style[i];
+        return div;
+      },
+
+      /**
+       * Returns a PRE element.
+       *
+       * @param {!required} classes  {Array}  A list of classes.
+       * @param {!required} style    {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_pre
+       */
+      _DOMFactory_pre: function(classes, style){
+        var pre = document.createElement('pre');
+        for(var i in classes) pre.classList.add(classes[i]);
+        for(var i in style)   pre.style[i] = style[i];
+        return pre;
+      },
+
+      /**
+       * Returns a TABLE element.
+       *
+       * @param {!required} classes  {Array}  A list of classes.
+       * @param {!required} style    {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_table
+       */
+      _DOMFactory_table: function(classes, style){
+        var table = document.createElement('table');
+        for(var i in classes) table.classList.add(classes[i]);
+        for(var i in style)   table.style[i] = style[i];
+        return table;
+      },
+
+      /**
+       * Returns an IRON-COLLAPSE element.
+       *
+       * @param {!required} classes  {Array}  A list of classes.
+       * @param {!required} style    {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_iron_collapse
+       */
+      _DOMFactory_iron_collapse: function(classes, style){
+        var collapse = document.createElement('iron-collapse');
+        for(var i in classes) collapse.classList.add(classes[i]);
+        for(var i in style)   collapse.style[i] = style[i];
+        return collapse;
+      },
+
+      /**
+       * Returns an IRON-ICON element.
+       *
+       * @param {!required} iconType  {String} The icon name (e.g. icons:add).
+       * @param {!required} title     {String} The icon title (tooltip).
+       * @param {!required} classes   {Array}  A list of classes.
+       * @param {!required} style     {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_icon
+       */
+      _DOMFactory_icon: function(iconType, title, classes, style){
+        var icon = document.createElement('iron-icon');
+        icon.set('icon', iconType);
+        icon.set('title', title);
+        for(var i in classes) icon.classList.add(classes[i]);
+        for(var i in style)   icon.style[i] = style[i];
+        return icon;
+      },
+
+      /**
+       * Returns a PAPER-TEXTAREA element.
+       *
+       * @param {!required} label       {String} The label of the paper-textarea.
+       * @param {!required} placeholder {String} The placeholder of the paper-textarea.
+       * @param {!required} value       {String} The value of the paper-textarea.
+       * @param {!required} rows        {Number} The default rows of the paper-textarea.
+       * @param {!required} maxRows     {Number} The maximum rows of the paper-textarea (0 for no maximum).
+       * @param {!required} classes     {Array}  A list of classes.
+       * @param {!required} style       {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_textarea
+       */
+      _DOMFactory_textarea: function(label, placeholder, value, rows, maxRows, classes, style){
+        // Set the default paramaters
+        var input = document.createElement('paper-textarea');
+        input.set('label',       label);
+        input.set('placeholder', placeholder);
+        input.set('value',       value);
+        input.set('rows',        rows);
+        input.set('maxRows',     maxRows);
+        for(var i in classes) input.classList.add(classes[i]);
+        for(var i in style)   input.style[i] = style[i];
+        // Return
+        return input;
+      },
+
+      /**
+       * Returns a PAPER-INPUT element.
+       *
+       * @param {!required} label       {String} The label of the paper-input.
+       * @param {!required} placeholder {String} The placeholder of the paper-input.
+       * @param {!required} value       {String} The value of the paper-input.
+       * @param {!required} classes     {Array}  A list of classes.
+       * @param {!required} style       {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_input
+       */
+      _DOMFactory_input: function(label, placeholder, value, classes, style){
+        // Set the default paramaters
+        var input = document.createElement('paper-input');
+        input.set('label', label);
+        input.set('placeholder', placeholder);
+        input.set('value', value);
+        for(var i in classes) input.classList.add(classes[i]);
+        for(var i in style){
+          input.style[i] = style[i];
+        }
+        // Return
+        return input;
+      },
+
+      /**
+       * Returns a PAPER-INPUT element.
+       *
+       * @param {!required} label       {String} The label of the paper-input.
+       * @param {!required} placeholder {String} The placeholder of the paper-input.
+       * @param {!required} min         {Number} The minimum value of the paper-input.
+       * @param {!required} max         {Number} The maximum value of the paper-input.
+       * @param {!required} value       {Number} The value of the paper-input.
+       * @param {!required} maxNumbers  {Number} The maximum figures count of the paper-input.
+       * @param {!required} classes     {Array}  A list of classes.
+       * @param {!required} style       {Object} A stylesheet object.
+       *
+       * @method _DOMFactory_input_number
+       */
+      _DOMFactory_input_number: function(label, placeholder, min, max, value, maxNumbers, classes, style){
+        // Set the default paramaters
+        var input = document.createElement('paper-input');
+        input.set('type', 'number');
+        input.set('label', label);
+        input.set('placeholder', placeholder);
+        if(min !== undefined && min !== null)               input.set('min', min);
+        if(max !== undefined && max !== null)               input.set('max', max);
+        if(maxNumbers !== undefined && maxNumbers !== null) input.set('maxlength', maxNumbers);
+        input.set('value', value);
+        for(var i in classes) input.classList.add(classes[i]);
+        for(var i in style){
+          input.style[i] = style[i];
+        }
+        // Set the verifications
+        input.addEventListener('input', function(){
+          if(((min !== undefined && min !== null) && input.value < min ) ||
+             ((max !== undefined && max !== null) && input.value > max )) input.set('invalid', true);
+          else input.set('invalid', false)
+        });
+        // Return
+        return input;
+      }
+
+    });
+  </script>
+</dom-module>
